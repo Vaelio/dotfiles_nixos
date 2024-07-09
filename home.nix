@@ -48,6 +48,8 @@
     pkgs.wofi
     pkgs.pavucontrol
     pkgs.betterbird
+    pkgs.neovide
+    pkgs.wl-clipboard-rs
 
     # TERM
     pkgs.bat
@@ -61,7 +63,7 @@
     pkgs.navi
     pkgs.yazi
     pkgs.rio
-    
+
     # Screenshot
     pkgs.grim
     pkgs.qt5.full
@@ -85,6 +87,9 @@
     pkgs.nerdfonts
     pkgs.font-awesome
 
+    # rust
+    pkgs.cargo
+    pkgs.cargo-update
 
   ];
 
@@ -147,5 +152,7 @@
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
 
+  # Enable bash and starship prompt
   programs.bash.enable = true;
+  programs.starship.enable = true;
 }
