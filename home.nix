@@ -40,6 +40,7 @@
     pkgs.waybar
     pkgs.xwayland
     pkgs.wayland
+    pkgs.hypridle
     pkgs.pyprland
     pkgs.xdg-desktop-portal-hyprland
     pkgs.hyprpaper
@@ -80,6 +81,9 @@
     pkgs.virt-manager
     pkgs.remmina
     pkgs.netscanner
+    pkgs.mpv
+    pkgs.nmap
+    pkgs.exegol
 
     # fonts
     pkgs.noto-fonts
@@ -114,6 +118,7 @@
     ".config/hypr/hyprlock.conf".source = dotfiles/hyprlock.conf;
     ".config/hypr/hyprpaper.conf".source = dotfiles/hyprpaper.conf;
     ".config/hypr/hyprland.conf".source = dotfiles/hyprland.conf;
+    ".config/hypr/hypridle.conf".source = dotfiles/hypridle.conf;
 
     # waybar
     ".config/waybar/config".source = dotfiles/waybar_config;
