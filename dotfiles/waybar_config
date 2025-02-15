@@ -7,7 +7,7 @@
     // Choose the order of the modules
     "modules-left": ["hyprland/workspaces"],
     "modules-center": ["hyprland/window"],
-    "modules-right": ["pulseaudio", "network", "cpu", "memory", "temperature", "backlight", "battery", "battery#bat2", "clock", "tray"],
+    "modules-right": ["pulseaudio", "custom/resolv", "network", "cpu", "memory", "temperature", "backlight", "battery", "battery#bat2", "tray", "clock"],
     // Modules configuration
     "hyprland/workspaces": {
          "disable-scroll": true,
@@ -26,6 +26,11 @@
              "urgent": "",
              "default": ""
          }
+     },
+     "custom/resolv": {
+         "format": "NS: {}",
+         "exec": "exec ~/.config/waybar/resolv.sh",
+	 "interval": 1,
      },
     "keyboard-state": {
         "numlock": true,
@@ -110,7 +115,9 @@
     "backlight": {
         // "device": "acpi_video1",
         "format": "{percent}% {icon}",
-        "format-icons": ["", "", "", "", "", "", "", "", ""]
+        "format-icons": ["", "", "", "", "", "", "", "", ""],
+	"on-scroll-up":   "brightnessctl s 1%+",
+        "on-scroll-down": "brightnessctl s 1%-"
     },
     "battery": {
         "states": {

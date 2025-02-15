@@ -14,7 +14,7 @@ rec {
   #imports = [
   #  ./tempdir-daemon.nix
   #] ++ lib.optional (lib.readFile("/etc/hostname") == "nixos-work\n") ./secrets-work.nix;
-
+  
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -131,7 +131,7 @@ rec {
     # rust
     pkgs.cargo
     pkgs.cargo-update
-
+    
     # keyboard stuff
     pkgs.vial
 
@@ -223,7 +223,7 @@ rec {
   programs.starship.enable = true;
   programs.bash.profileExtra = ''
     if uwsm check may-start && uwsm select; then
-        exec systemd-cat -t uwsm_start uwsm start default
+  	exec systemd-cat -t uwsm_start uwsm start default
     fi
   '';
   programs.nushell.enable = true;

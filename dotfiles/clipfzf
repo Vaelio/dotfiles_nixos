@@ -1,0 +1,3 @@
+#!/home/vaelio/.nix-profile/bin/bash
+
+cliphist list | fzf | cliphist decode | wl-copy
