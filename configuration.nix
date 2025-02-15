@@ -2,31 +2,66 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   imports =
     [ # Include the results of the hardware scan.
-      <nixos-hardware/dell/xps/13-9350>
+      <nixos-hardware/lenovo/thinkpad/p14s>
       ./hardware-configuration.nix
     ];
+
+  # Enable AMD microcode update
+  hardware.cpu.amd.updateMicrocode = true;
+
+  # backup configuration
+  system.copySystemConfiguration = true;
+
+  # TODO check if this is latest version
+  nix.package = pkgs.nixVersions.latest;
 
   # Bootloader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.kernelParams = [ "psmouse.synaptics_intertouch=0" "CONFIG_VHOST_VSOCK=m"];
 
-  networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "FOR-M388"; # Define your hostname.
+  networking.useDHCP = false; # much better for pentesting
   networking.enableIPv6  = false;
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
-
+  
+  # add swap to prevent some freezes maybe
+  swapDevices = [ {
+    device = "/var/lib/swapfile";
+    randomEncryption.enable = true;
+    size = 16*1024;
+  } ];
   # Configure network proxy if necessary
   # networking.proxy.default = "http://user:password@proxy:port/";
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+
+  
 
   # Enable networking
   networking.networkmanager.enable = false;
   networking.wireless.iwd.enable = true;
 
+  networking.extraHosts = 
+    ''
+    '';
+
+
+  # Custom udev for vial
+  services.udev.extraRules = ''
+    KERNEL=="hidraw*", SUBSYSTEM=="hidraw", MODE="0660", GROUP="users", TAG+="uaccess", TAG+="udev-acl"
+  '';
+
+  # enable thinkfan (fan stuff for thinkpad)
+  # services.thinkfan.enable = true;
+
+  # enable polkit
+  security.polkit.enable = true;
+  virtualisation.spiceUSBRedirection.enable = true;
   # enable libvirtd
   virtualisation.libvirtd = {
     enable = true;
@@ -45,19 +80,17 @@
   };
 
   # hardware acceleration
-  # hardware.opengl.enable = true;
-  nixpkgs.config.packageOverrides = pkgs: {
-    intel-vaapi-driver = pkgs.intel-vaapi-driver.override { enableHybridCodec = true; };
-  };
-  hardware.opengl = { # hardware.graphics on unstable
+  hardware.graphics = {
     enable = true;
-    extraPackages = with pkgs; [
-      #intel-media-driver # LIBVA_DRIVER_NAME=iHD
-      intel-vaapi-driver # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
-      libvdpau-va-gl
+    extraPackages = [
+      pkgs.rocmPackages.clr.icd
+      pkgs.amdvlk
+    ];
+    extraPackages32 = [
+      pkgs.driversi686Linux.amdvlk
     ];
   };
-  #environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
+  environment.variables.AMD_VULKAN_ICD = "RADV";
   #---
 
 
@@ -67,6 +100,7 @@
 
   # enable flatpak
   services.flatpak.enable = true;
+
   xdg.portal.enable = true;
   xdg.portal.extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
   xdg.portal.config.common.default = "gtk";
@@ -97,7 +131,7 @@
   users.users.vaelio = {
     isNormalUser = true;
     description = "vaelio";
-    extraGroups = [ "wheel" "libvirtd" ];
+    extraGroups = [ "wheel" "libvirtd" "wireshark" "arduino"];
     packages = with pkgs; [];
   };
 
@@ -114,11 +148,15 @@
     curl
     busybox
     git
+    innernet
+    vim
   ];
 
   fonts.packages = with pkgs;[
   ];
 
+  systemd.ctrlAltDelUnit="";
+  systemd.services.ctrl-alt-del.wantedBy = lib.mkForce [];
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -127,10 +165,22 @@
   #   enableSSHSupport = true;
   # };
 
+  programs.appimage = {
+    enable = true;
+    binfmt = true;
+  };
+
+  programs.hyprland = {
+    enable = true;
+    withUWSM = true;
+  };
+  environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  programs.uwsm.enable = true;
+
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
+  services.openssh.enable = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
@@ -145,23 +195,8 @@
     alsa.support32Bit = true;
     pulse.enable = true;
   };
+  services.earlyoom.enable = true;
 
-  # security stuff
-  security.apparmor.enable = true;
-  security.apparmor.killUnconfinedConfinables = true;
-  boot.kernelParams = [
-    # Don't merge slabs
-    "slab_nomerge"
-
-    # Overwrite free'd pages
-    "page_poison=1"
-
-    # Enable page allocator randomization
-    "page_alloc.shuffle=1"
-
-    # Disable debugfs
-    "debugfs=off"
-  ];
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
   # on your system were taken. It‘s perfectly fine and recommended to leave
