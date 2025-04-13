@@ -6,7 +6,11 @@ rec {
   home.username = "vaelio";
   home.homeDirectory = "/home/vaelio";
 
-  imports = [ ./tempdir-daemon.nix ];
+  imports = [
+  ./tempdir-daemon.nix
+  ./hyprland_config.nix
+  ./hypridle_config.nix
+  ];
   #imports = [
   #  ./tempdir-daemon.nix
   #] ++ lib.optional (home.username == "vaelio") ./secrets-work.nix;
@@ -14,7 +18,7 @@ rec {
   #imports = [
   #  ./tempdir-daemon.nix
   #] ++ lib.optional (lib.readFile("/etc/hostname") == "nixos-work\n") ./secrets-work.nix;
-  
+
 
   # This value determines the Home Manager release that your configuration is
   # compatible with. This helps avoid breakage when a new Home Manager release
@@ -32,25 +36,16 @@ rec {
     size = 16;
   };
 
+  wayland.windowManager.hyprland.enable = true;
+  wayland.windowManager.hyprland.xwayland.enable = true;
+  wayland.windowManager.hyprland.plugins = [
+    pkgs.hyprlandPlugins.hyprsplit
+  ];
+  services.hypridle.enable = true;
+
   # The home.packages option allows you to install Nix packages into your
   # environment.
   home.packages = [
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
-    # pkgs.hello
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
-
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
 
     # GUI
     #pkgs.hyprland
@@ -63,6 +58,8 @@ rec {
     pkgs.hyprpaper
     pkgs.hyprlock
     (pkgs.wrapFirefox (pkgs.firefox-unwrapped.override { pipewireSupport = true;}) {})
+    pkgs.librewolf
+
     pkgs.wofi
     pkgs.rofi
     pkgs.pavucontrol
@@ -100,6 +97,8 @@ rec {
     pkgs.slurp
 
     # Tools
+    pkgs.galculator
+    pkgs.spacedrive
     pkgs.chromium
     pkgs.vscodium
     pkgs.cloudflared
@@ -120,6 +119,7 @@ rec {
     pkgs.fzf
     pkgs.pcmanfm
     pkgs.nix-search-cli
+    #(pkgs.burpsuite.override { proEdition = true; })
 
     # fonts
     pkgs.noto-fonts
@@ -131,7 +131,7 @@ rec {
     # rust
     pkgs.cargo
     pkgs.cargo-update
-    
+
     # keyboard stuff
     pkgs.vial
 
@@ -142,8 +142,6 @@ rec {
     pkgs.python3
     pkgs.python312Packages.ipython
 
-    pkgs.galculator
-    pkgs.spacedrive
   ];
 
   services.tempdir-daemon.enable = true;
@@ -167,13 +165,13 @@ rec {
     ".config/hypr/pyprland.toml".source = dotfiles/pyprland.toml;
     ".config/hypr/wofi-power-menu.sh".source = dotfiles/wofi-power-menu.sh;
     ".config/hypr/hyprlock.conf".source = dotfiles/hyprlock.conf;
-    ".config/hypr/hyprpaper.conf".source = dotfiles/hyprpaper.conf;
+    #".config/hypr/hyprpaper.conf".source = dotfiles/hyprpaper.conf;
     ".config/hypr/manix.sh".source = dotfiles/manix.sh;
-    ".config/hypr/hyprland.conf".source = dotfiles/hyprland.conf;
-    ".config/hypr/hypridle.conf".source = dotfiles/hypridle.conf;
-    ".config/clipcat/clipcatd.toml".source = dotfiles/clipcatd.toml;
-    ".config/clipcat/clipcat-menu.toml".source = dotfiles/clipcat-menu.toml;
-    ".wallpapers/wallpaper.png".source = dotfiles/wallpaper.png;
+    #".config/hypr/hyprland.conf".source = dotfiles/hyprland.conf;
+    #".config/hypr/hypridle.conf".source = dotfiles/hypridle.conf;
+    #".config/clipcat/clipcatd.toml".source = dotfiles/clipcatd.toml;
+    #".config/clipcat/clipcat-menu.toml".source = dotfiles/clipcat-menu.toml;
+    #".wallpapers/wallpaper.png".source = dotfiles/wallpaper.png;
 
     # waybar
     ".config/waybar/config".source = dotfiles/waybar_config;
@@ -181,7 +179,7 @@ rec {
     ".config/waybar/style.css".source = dotfiles/waybar_style.css;
 
     # cliphist
-    ".local/bin/clipfzf".source = dotfiles/clipfzf;
+    #".local/bin/clipfzf".source = dotfiles/clipfzf;
   };
 
   # Home Manager can also manage your environment variables through
@@ -204,6 +202,7 @@ rec {
     # EDITOR = "emacs";
     EDITOR = "nvim";
     PATH="$HOME/.cargo/bin/:$HOME/.local/bin/:$PATH";
+    NIXOS_OZONE_WL = "1";
     #XDG_DATA_DIRS="$HOME/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:$XDG_DATA_DIRS";
   };
 
@@ -212,6 +211,8 @@ rec {
     vim="nvim";
     ls="lsd";
     tpd="tempdir-daemon";
+    dhcp="sudo udhcpc -qi ";
+    feroxbuster="feroxbuster -w \\`fzf --walker-root=$HOME/.nix-profile/share/wordlists/seclists/\\`";
     #clipfzf="cliphist list | fzf | cliphist decode | wl-copy";
   };
 
@@ -223,8 +224,12 @@ rec {
   programs.starship.enable = true;
   programs.bash.profileExtra = ''
     if uwsm check may-start && uwsm select; then
-  	exec systemd-cat -t uwsm_start uwsm start default
+        exec systemd-cat -t uwsm_start uwsm start default
     fi
+
+    resolv() {
+        echo "nameserver $1" | sudo tee /etc/resolv.conf
+    }
   '';
   programs.nushell.enable = true;
   programs.starship.enableNushellIntegration = true;
